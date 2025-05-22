@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Tablets</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .student-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 10px;
+        }
+        .student-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        .student-number {
+            min-width: 50px;
+            font-weight: bold;
+        }
+        .tablet-input {
+            width: 60px;
+            margin: 0 10px;
+            padding: 5px;
+        }
+        .status-checkbox {
+            margin: 0 5px;
+            cursor: pointer;
+        }
+        .report-btn {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .report-btn:hover {
+            background-color: #45a049;
+        }
+        select, .date-display {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h2>Controle de Tablets</h2>
+                <div class="date-display" id="current-date"></div>
+            </div>
+            <div>
+                <label for="class-select">Turma:</label>
+                <select id="class-select">
+                    <option value="1A">1° A</option>
+                    <option value="1B">1° B</option>
+                    <option value="2A">2° A</option>
+                    <option value="2B">2° B</option>
+                    <option value="3A">3° A</option>
+                    <option value="3B">3° B</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="student-list" id="student-list"></div>
+
+        <button class="report-btn" id="generate-report">Gerar Relatório</button>
+    </div>
+
+    <script>
+        // Atualiza data atual
+        function updateDate() {
+            const now = new Date();
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            document.getElementById('current-date').textContent = 
+                `Data: ${now.toLocaleDateString('pt-BR', options)}`;
+        }
+
+        // Cria lista de alunos
+        function createStudentList() {
+            const studentList = document.getElementById('student-list');
+            
+            for (let i = 1; i <= 50; i++) {
+                const studentItem = document.createElement('div');
+                studentItem.className = 'student-item';
+                
+                studentItem.innerHTML = `
+                    <div class="student-number">${i.toString().padStart(2, '0')}</div>
+                    <input type="text" class="tablet-input" placeholder="Tablet" id="tablet-${i}">
+                    <label><input type="checkbox" class="status-checkbox" id="battery-${i}"> Sem Bateria</label>
+                    <label><input type="checkbox" class="status-checkbox" id="damage-${i}"> Com Avaria</label>
+                `;
+                
+                studentList.appendChild(studentItem);
+            }
+        }
+
+        // Gera relatório CSV
+        function generateReport() {
+            const turma = document.getElementById('class-select').value;
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            let csvContent = "Aluno,Tablet,Sem Bateria,Com Avaria,Turma,Data\n";
+            
+            for (let i = 1; i <= 50; i++) {
+                const tablet = document.getElementById(`tablet-${i}`).value;
+                if (tablet) {
+                    const noBattery = document.getElementById(`battery-${i}`).checked ? 'Sim' : 'Não';
+                    const hasDamage = document.getElementById(`damage-${i}`).checked ? 'Sim' : 'Não';
+                    
+                    csvContent += `${i.toString().padStart(2, '0')},${tablet},${noBattery},${hasDamage},${turma},${dateStr}\n`;
+                }
+            }
+            
+            // Cria link para download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `relatorio_tablets_${turma}_${dateStr}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDate();
+            createStudentList();
+            
+            document.getElementById('generate-report').addEventListener('click', generateReport);
+        });
+    </script>
+</body>
+</html>
